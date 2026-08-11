@@ -7,6 +7,8 @@ use App\Models\Document;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+
 class ModelHelpersTest extends TestCase
 {
     use RefreshDatabase;
@@ -35,7 +37,7 @@ class ModelHelpersTest extends TestCase
         $this->assertFalse($category->checkAccessCode('senha-errada'));
     }
 
-    /** @dataProvider humanSizeProvider */
+    #[DataProvider('humanSizeProvider')]
     public function test_document_human_size_formats_bytes_correctly(int $bytes, string $expected): void
     {
         $document = Document::factory()->make(['size' => $bytes]);

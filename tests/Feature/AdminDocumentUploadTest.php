@@ -117,4 +117,71 @@ class AdminDocumentUploadTest extends TestCase
         $this->assertDatabaseMissing('documents', ['id' => $document->id]);
         Storage::disk('documents')->assertMissing($path);
     }
+
+    public function test_admin_can_update_document_metadata_without_replacing_file(): void
+    {
+        $admin = User::factory()->create();
+        $category = Category::factory()->create(['name' => 'Categoria Inicial']);
+        $newCategory = Category::factory()->create(['name' => 'Categoria Destino']);
+        
+        $file = UploadedFile::fake()->create('relatorio.pdf', 100, 'application/pdf');
+        $path = $file->store('documents/' . $category->slug, 'documents');
+        
+        $document = Document::factory()->for($category)->create([
+            'title' => 'Titulo Antigo',
+            'disk_path' => $path,
+            'original_name' => 'relatorio.pdf',
+        ]);
+
+        $response = $this->actingAs($admin)->put(route('admin.documents.update', $document), [
+            'category_id' => $newCategory->id,
+            'title' => 'Titulo Novo',
+        ]);
+
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertDatabaseHas('documents', [
+            'id' => $document->id,
+            'category_id' => $newCategory->id,
+            'title' => 'Titulo Novo',
+        ]);
+
+        // Assert file was moved to the new category slug directory
+        $newExpectedPath = 'documents/' . $newCategory->slug . '/' . basename($path);
+        Storage::disk('documents')->assertExists($newExpectedPath);
+        Storage::disk('documents')->assertMissing($path);
+    }
+
+    public function test_admin_can_replace_document_file(): void
+    {
+        $admin = User::factory()->create();
+        $category = Category::factory()->create();
+        
+        $oldFile = UploadedFile::fake()->create('antigo.pdf', 50, 'application/pdf');
+        $oldPath = $oldFile->store('documents/' . $category->slug, 'documents');
+        
+        $document = Document::factory()->for($category)->create([
+            'title' => 'Contrato',
+            'disk_path' => $oldPath,
+            'original_name' => 'antigo.pdf',
+        ]);
+
+        $newFile = UploadedFile::fake()->create('novo.docx', 120, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+
+        $response = $this->actingAs($admin)->put(route('admin.documents.update', $document), [
+            'category_id' => $category->id,
+            'title' => 'Contrato Atualizado',
+            'file' => $newFile,
+        ]);
+
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertDatabaseHas('documents', [
+            'id' => $document->id,
+            'title' => 'Contrato Atualizado',
+            'original_name' => 'novo.docx',
+        ]);
+
+        $document->refresh();
+        Storage::disk('documents')->assertExists($document->disk_path);
+        Storage::disk('documents')->assertMissing($oldPath);
+    }
 }

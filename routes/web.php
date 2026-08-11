@@ -37,6 +37,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('documentos/novo', [AdminDocumentController::class, 'create'])->name('documents.create');
         Route::post('documentos', [AdminDocumentController::class, 'store'])->name('documents.store');
+        Route::get('documentos/{document}/editar', [AdminDocumentController::class, 'edit'])->name('documents.edit');
+        Route::put('documentos/{document}', [AdminDocumentController::class, 'update'])->name('documents.update');
         Route::delete('documentos/{document}', [AdminDocumentController::class, 'destroy'])->name('documents.destroy');
     });
 });

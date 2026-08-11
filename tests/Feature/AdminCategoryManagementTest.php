@@ -64,7 +64,7 @@ class AdminCategoryManagementTest extends TestCase
     public function test_admin_can_upload_a_cover_image_when_creating_a_category(): void
     {
         $admin = User::factory()->create();
-        $image = UploadedFile::fake()->image('cover.jpg');
+        $image = UploadedFile::fake()->create('cover.jpg', 100, 'image/jpeg');
 
         $this->actingAs($admin)->post(route('admin.categories.store'), [
             'name' => 'Documentos Pessoais',
