@@ -29,7 +29,7 @@ class AdminDocumentUploadTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.documents.store'), [
             'category_id' => $category->id,
             'title' => 'Diploma de Engenharia',
-            'file' => $file,
+            'files' => [$file],
         ]);
 
         $response->assertRedirect(route('admin.dashboard'));
@@ -52,10 +52,10 @@ class AdminDocumentUploadTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.documents.store'), [
             'category_id' => $category->id,
             'title' => 'Suspeito',
-            'file' => $file,
+            'files' => [$file],
         ]);
 
-        $response->assertSessionHasErrors('file');
+        $response->assertSessionHasErrors('files.0');
         $this->assertDatabaseCount('documents', 0);
     }
 
@@ -68,10 +68,10 @@ class AdminDocumentUploadTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.documents.store'), [
             'category_id' => $category->id,
             'title' => 'Ficheiro grande',
-            'file' => $file,
+            'files' => [$file],
         ]);
 
-        $response->assertSessionHasErrors('file');
+        $response->assertSessionHasErrors('files.0');
     }
 
     public function test_upload_requires_an_existing_category(): void
@@ -82,7 +82,7 @@ class AdminDocumentUploadTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.documents.store'), [
             'category_id' => 9999,
             'title' => 'Doc',
-            'file' => $file,
+            'files' => [$file],
         ]);
 
         $response->assertSessionHasErrors('category_id');
@@ -96,11 +96,44 @@ class AdminDocumentUploadTest extends TestCase
         $response = $this->post(route('admin.documents.store'), [
             'category_id' => $category->id,
             'title' => 'Doc',
-            'file' => $file,
+            'files' => [$file],
         ]);
 
         $response->assertRedirect(route('admin.login'));
         $this->assertDatabaseCount('documents', 0);
+    }
+
+    public function test_admin_can_upload_multiple_documents_at_once(): void
+    {
+        $admin = User::factory()->create();
+        $category = Category::factory()->create();
+        $file1 = UploadedFile::fake()->create('contrato.docx', 200, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        $file2 = UploadedFile::fake()->create('imagem.png', 150, 'image/png');
+
+        $response = $this->actingAs($admin)->post(route('admin.documents.store'), [
+            'category_id' => $category->id,
+            'files' => [$file1, $file2],
+        ]);
+
+        $response->assertRedirect(route('admin.dashboard'));
+        
+        $this->assertDatabaseHas('documents', [
+            'category_id' => $category->id,
+            'title' => 'contrato',
+            'original_name' => 'contrato.docx',
+        ]);
+        
+        $this->assertDatabaseHas('documents', [
+            'category_id' => $category->id,
+            'title' => 'imagem',
+            'original_name' => 'imagem.png',
+        ]);
+
+        $doc1 = Document::firstWhere('original_name', 'contrato.docx');
+        $doc2 = Document::firstWhere('original_name', 'imagem.png');
+
+        Storage::disk('documents')->assertExists($doc1->disk_path);
+        Storage::disk('documents')->assertExists($doc2->disk_path);
     }
 
     public function test_admin_can_delete_a_document(): void

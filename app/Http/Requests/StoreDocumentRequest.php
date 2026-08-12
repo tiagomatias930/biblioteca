@@ -14,10 +14,10 @@ class StoreDocumentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:150'],
+            'title' => ['nullable', 'string', 'max:150'],
             'category_id' => ['required', 'exists:categories,id'],
-            'file' => [
-                'required',
+            'files' => ['required', 'array', 'min:1'],
+            'files.*' => [
                 'file',
                 'max:20480', // 20 MB
                 'mimes:pdf,doc,docx,jpg,jpeg,png,zip,xlsx,pptx',

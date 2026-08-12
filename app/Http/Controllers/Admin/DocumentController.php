@@ -23,23 +23,40 @@ class DocumentController extends Controller
     public function store(StoreDocumentRequest $request): RedirectResponse
     {
         $validated = $request->validated();
-        $file = $request->file('file');
         $category = Category::findOrFail($validated['category_id']);
+        $files = $request->file('files');
+        $count = 0;
 
-        $storedPath = $file->store('documents/' . $category->slug, 'documents');
+        foreach ($files as $file) {
+            $storedPath = $file->store('documents/' . $category->slug, 'documents');
 
-        Document::create([
-            'category_id' => $category->id,
-            'title' => $validated['title'],
-            'disk_path' => $storedPath,
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize(),
-        ]);
+            // If a custom title is set AND there is only one file, use the custom title.
+            // Otherwise, use the file name without extension.
+            if (!empty($validated['title']) && count($files) === 1) {
+                $title = $validated['title'];
+            } else {
+                $title = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            }
+
+            Document::create([
+                'category_id' => $category->id,
+                'title' => $title,
+                'disk_path' => $storedPath,
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType(),
+                'size' => $file->getSize(),
+            ]);
+
+            $count++;
+        }
+
+        $message = $count === 1 
+            ? 'Documento enviado com sucesso.' 
+            : "{$count} documentos enviados com sucesso.";
 
         return redirect()
             ->route('admin.dashboard')
-            ->with('status', 'Documento enviado com sucesso.');
+            ->with('status', $message);
     }
 
     public function edit(Document $document): View

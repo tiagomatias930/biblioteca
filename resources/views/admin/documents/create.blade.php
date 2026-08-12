@@ -28,18 +28,20 @@
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Título do documento</label>
-            <input type="text" name="title" value="{{ old('title') }}" required placeholder="Ex: Contrato de Trabalho"
+            <label class="block text-sm font-medium text-slate-700 mb-1">Título do documento (opcional)</label>
+            <input type="text" name="title" value="{{ old('title') }}" placeholder="Ex: Contrato de Trabalho (usado apenas se enviar 1 ficheiro)"
                    class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+            <p class="text-slate-400 text-xs mt-1">Se deixar em branco ou enviar múltiplos ficheiros, o nome de cada ficheiro será usado como título.</p>
             @error('title') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
 
         <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Ficheiro (máx. 20 MB)</label>
-            <input type="file" name="file" required 
+            <label class="block text-sm font-medium text-slate-700 mb-1">Ficheiros (máx. 20 MB por ficheiro)</label>
+            <input type="file" name="files[]" multiple required 
                    class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-            <p class="text-slate-400 text-xs mt-1.5">Formatos suportados: PDF, DOC, DOCX, JPG, PNG, ZIP, XLSX, PPTX.</p>
-            @error('file') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
+            <p class="text-slate-400 text-xs mt-1.5">Pode selecionar múltiplos ficheiros em simultâneo. Formatos suportados: PDF, DOC, DOCX, JPG, PNG, ZIP, XLSX, PPTX.</p>
+            @error('files') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
+            @error('files.*') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
         </div>
 
         <div class="pt-2 flex gap-3">
