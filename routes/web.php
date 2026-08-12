@@ -42,3 +42,33 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('documentos/{document}', [AdminDocumentController::class, 'destroy'])->name('documents.destroy');
     });
 });
+
+Route::get('/debug-db', function () {
+    try {
+        $dbPath = config('database.connections.sqlite.database');
+        $exists = file_exists($dbPath);
+        $writable = $dbPath ? is_writable(dirname($dbPath)) : false;
+
+        $users = \App\Models\User::all()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'email' => $user->email,
+                'password_hash' => substr($user->password, 0, 15) . '...',
+            ];
+        });
+
+        return response()->json([
+            'default_connection' => config('database.default'),
+            'sqlite_path' => $dbPath,
+            'sqlite_exists' => $exists,
+            'sqlite_writable' => $writable,
+            'config_admin_email' => config('services.admin.email'),
+            'users_in_db' => $users,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ], 500);
+    }
+});
