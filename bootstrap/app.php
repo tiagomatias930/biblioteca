@@ -11,6 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+
         // The app has no default "login" route (auth is admin-only,
         // under /admin), so the 'auth' middleware must be told where
         // to send unauthenticated visitors instead of the framework
