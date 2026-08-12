@@ -11,10 +11,10 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => env('ADMIN_EMAIL', 'admin@example.com')],
+            ['email' => config('services.admin.email')],
             [
                 'name' => 'Administrador',
-                'password' => Hash::make(env('ADMIN_PASSWORD', 'change-me-please')),
+                'password' => Hash::make(config('services.admin.password')),
             ]
         );
     }

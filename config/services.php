@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'admin' => [
+        'email' => env('ADMIN_EMAIL', 'admin@example.com'),
+        'password' => env('ADMIN_PASSWORD', 'change-me-please'),
+    ],
+
+    'category' => [
+        'confidential_access_code' => env('CONFIDENTIAL_ACCESS_CODE', 'altere-este-codigo'),
+    ],
+
 ];
